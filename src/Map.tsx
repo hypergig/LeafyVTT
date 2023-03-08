@@ -47,7 +47,7 @@ function Map(props: Props) {
     }
 
     return (
-        <MapContainer id={"map"} crs={CRS.Simple} bounds={boundaries.map}>
+        <MapContainer zoomSnap={.5} id={"map"} crs={CRS.Simple} bounds={boundaries.map}>
             <ImageOverlay url={props.imgUrl} bounds={boundaries.img}/>
             {props.children}
         </MapContainer>

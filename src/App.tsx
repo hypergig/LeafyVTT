@@ -1,11 +1,16 @@
 import React from 'react';
 import './App.css';
 import Map from './Map'
+import Token from "./Token";
+import {LatLng} from "leaflet";
 
 function App() {
     return (
         <Map imgUrl={"https://i.pinimg.com/originals/a2/04/d4/a204d4a2faceb7f4ae93e8bd9d146469.jpg"}
-             gridPx={72} offsetHeightPx={30} offsetWidthPx={30}/>
+             gridPx={72} offsetHeightPx={42} offsetWidthPx={38}>
+            <Token imgUrl={'https://i.redd.it/ew8lwfx2o1361.png'} coordinate={new LatLng(10, 12)}
+                   sizeFt={5}/>
+        </Map>
     );
 }
 
