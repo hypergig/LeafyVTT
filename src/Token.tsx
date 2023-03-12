@@ -1,6 +1,6 @@
 import React from "react";
 import L from "leaflet";
-import {Circle, ImageOverlay, LayerGroup} from "react-leaflet";
+import {Circle, FeatureGroup, ImageOverlay} from "react-leaflet";
 import '@geoman-io/leaflet-geoman-free';
 import '@geoman-io/leaflet-geoman-free/dist/leaflet-geoman.css';
 
@@ -9,7 +9,7 @@ interface Props {
     /** the token image */
     imgUrl: string
     /** the grid position */
-    latLang: L.LatLng
+    latLng: L.LatLng
     /** the size of the token in squares */
     size: number
 }
@@ -17,11 +17,6 @@ interface Props {
 const toCenter = (latLang: L.LatLng, size: number) => {
     const offset = size / 2
     return new L.LatLng(latLang.lat + offset, latLang.lng + offset)
-}
-
-const toSouthwest = (latLang: L.LatLng, size: number) => {
-    const offset = size / 2
-    return new L.LatLng(latLang.lat - offset, latLang.lng - offset)
 }
 
 const toBounds = (latLang: L.LatLng, size: number) => {
@@ -33,45 +28,38 @@ const toSnap = (latLang: L.LatLng) => {
 }
 
 function Token(props: Props) {
+    const [latlng, setLatlng] = React.useState(props.latLng)
 
-    const circleRef = React.useRef<L.Circle>(null)
+    const groupRef = React.useRef<L.FeatureGroup>(null)
     const imageRef = React.useRef<L.ImageOverlay>(null)
 
     React.useEffect(() => {
-        circleRef.current?.pm.enableLayerDrag()
+        groupRef.current?.getLayers().forEach((l: L.Layer) => {
+            // @ts-ignore
+            l.pm.enableLayerDrag()
+        })
 
-        const move = (latLang: L.LatLng) => {
-            circleRef.current?.setLatLng(toCenter(latLang, props.size))
-            imageRef.current?.setBounds(toBounds(latLang, props.size))
-        }
-
-        const change = (e: L.LeafletEvent) => {
-            if (circleRef.current && imageRef.current) {
-                imageRef.current?.setBounds(toBounds(toSouthwest(circleRef.current.getLatLng(), props.size), props.size))
-            }
-        }
+        groupRef.current?.pm.setOptions({syncLayersOnDrag: true})
 
         const dragend = (e: L.LeafletEvent) => {
-            if (circleRef.current && imageRef.current) {
-                move(toSnap(toSouthwest(circleRef.current.getLatLng(), props.size)))
+            if (imageRef.current) {
+                setLatlng(toSnap(imageRef.current?.getBounds().getSouthWest()))
             }
         }
 
-        circleRef.current?.on("pm:change", change)
-        circleRef.current?.on("pm:dragend", dragend)
+        imageRef.current?.on("pm:dragend", dragend)
         return () => {
-            circleRef.current?.off("pm:change", change)
-            circleRef.current?.off("pm:dragend", dragend)
+            imageRef.current?.off("pm:dragend", dragend)
         }
     })
 
     return (
-        <LayerGroup>
-            <Circle ref={circleRef} fillOpacity={0} center={toCenter(props.latLang, props.size)}
+        <FeatureGroup ref={groupRef}>
+            <Circle className={"token"} fillOpacity={0} center={toCenter(latlng, props.size)}
                     radius={props.size / 2}/>
-            <ImageOverlay ref={imageRef} url={props.imgUrl}
-                          bounds={toBounds(props.latLang, props.size)}/>
-        </LayerGroup>
+            <ImageOverlay className={"token"} ref={imageRef} url={props.imgUrl}
+                          bounds={toBounds(latlng, props.size)}/>
+        </FeatureGroup>
     )
 }
 
