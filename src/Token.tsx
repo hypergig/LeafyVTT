@@ -37,40 +37,23 @@ function Token(props: Props) {
     const circleRef = React.useRef<L.Circle>(null)
     const imageRef = React.useRef<L.ImageOverlay>(null)
 
-
     React.useEffect(() => {
         circleRef.current?.pm.enableLayerDrag()
 
+        const move = (latLang: L.LatLng) => {
+            circleRef.current?.setLatLng(toCenter(latLang, props.size))
+            imageRef.current?.setBounds(toBounds(latLang, props.size))
+        }
+
         const change = (e: L.LeafletEvent) => {
             if (circleRef.current && imageRef.current) {
-                imageRef.current.setBounds(
-                    toBounds(
-                        toSnap(
-                            toSouthwest(
-                                circleRef.current.getLatLng(),
-                                props.size
-                            )
-                        ),
-                        props.size
-                    )
-                )
+                imageRef.current?.setBounds(toBounds(toSouthwest(circleRef.current.getLatLng(), props.size), props.size))
             }
         }
 
-
         const dragend = (e: L.LeafletEvent) => {
-            if (circleRef.current) {
-                circleRef.current.setLatLng(
-                    toCenter(
-                        toSnap(
-                            toSouthwest(
-                                circleRef.current.getLatLng(),
-                                props.size
-                            )
-                        ),
-                        props.size
-                    )
-                )
+            if (circleRef.current && imageRef.current) {
+                move(toSnap(toSouthwest(circleRef.current.getLatLng(), props.size)))
             }
         }
 
@@ -85,7 +68,7 @@ function Token(props: Props) {
     return (
         <LayerGroup>
             <Circle ref={circleRef} fillOpacity={0} center={toCenter(props.latLang, props.size)}
-                    radius={props.size / 2}></Circle>
+                    radius={props.size / 2}/>
             <ImageOverlay ref={imageRef} url={props.imgUrl}
                           bounds={toBounds(props.latLang, props.size)}/>
         </LayerGroup>
